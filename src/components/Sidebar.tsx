@@ -8,7 +8,8 @@ import {
   Users,
   Shield,
   Package,
-  Settings,
+  DollarSign,
+  BarChart3,
   Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,8 @@ const navigation = [
   { name: "Customers", href: "/customers", icon: Users },
   { name: "Warranty Claims", href: "/warranty", icon: Shield },
   { name: "Parts & Inventory", href: "/parts", icon: Package },
+  { name: "Payments", href: "/payments", icon: DollarSign },
+  { name: "Monthly Revenue", href: "/payments/monthly", icon: BarChart3 },
 ];
 
 export default function Sidebar() {

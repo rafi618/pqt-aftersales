@@ -1,15 +1,20 @@
-import { cn, statusColors, priorityColors } from "@/lib/utils";
+import { cn, statusColors, priorityColors, invoiceStatusColors } from "@/lib/utils";
 
 interface StatusBadgeProps {
   value: string;
-  type?: "status" | "priority";
+  type?: "status" | "priority" | "invoice";
 }
 
 export default function StatusBadge({
   value,
   type = "status",
 }: StatusBadgeProps) {
-  const colors = type === "priority" ? priorityColors : statusColors;
+  const colorMap = {
+    status: statusColors,
+    priority: priorityColors,
+    invoice: invoiceStatusColors,
+  };
+  const colors = colorMap[type];
   return (
     <span
       className={cn(
@@ -17,7 +22,7 @@ export default function StatusBadge({
         colors[value] || "bg-gray-100 text-gray-800"
       )}
     >
-      {value.replace("-", " ")}
+      {value.replace(/-|_/g, " ")}
     </span>
   );
 }
