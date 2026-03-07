@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  address     String?
+  city        String?
+  country     String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tickets         Ticket[]
+  warrantyClaims  WarrantyClaim[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String   @unique
+  category    String?
+  description String?
+  warrantyMonths Int   @default(12)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tickets         Ticket[]
+  warrantyClaims  WarrantyClaim[]
+  parts           Part[]
+}
+
+model Ticket {
+  id          String   @id @default(cuid())
+  ticketNo    String   @unique
+  subject     String
+  description String?
+  status      String   @default("open")
+  priority    String   @default("medium")
+  category    String   @default("general")
+  assignedTo  String?
+  resolution  String?
+
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WarrantyClaim {
+  id              String   @id @default(cuid())
+  claimNo         String   @unique
+  status          String   @default("pending")
+  issueDescription String?
+  resolution      String?
+  purchaseDate    DateTime?
+  expiryDate      DateTime?
+
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Part {
+  id          String   @id @default(cuid())
+  name        String
+  partNo      String   @unique
+  description String?
+  quantity    Int      @default(0)
+  minStock    Int      @default(5)
+  unitPrice   Float    @default(0)
+  location    String?
+
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
