@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
 interface Claim {
@@ -28,6 +29,7 @@ export default function WarrantyDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const [claim, setClaim] = useState<Claim | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     status: "",
@@ -60,8 +62,6 @@ export default function WarrantyDetailPage({
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this warranty claim?"))
-      return;
     const res = await fetch(`/api/warranty/${id}`, { method: "DELETE" });
     if (res.ok) {
       router.push("/warranty");
@@ -88,13 +88,21 @@ export default function WarrantyDetailPage({
           Back to Warranty Claims
         </Link>
         <button
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           className="inline-flex items-center gap-2 text-sm text-red-500 hover:text-red-700"
         >
           <Trash2 className="h-4 w-4" />
           Delete
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete Warranty Claim"
+        message={`Are you sure you want to delete claim ${claim.claimNo}? This action cannot be undone.`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-start justify-between mb-6">
@@ -123,7 +131,16 @@ export default function WarrantyDetailPage({
             <p className="text-xs font-medium text-gray-500 uppercase">
               Product
             </p>
-            <p className="text-sm">{claim.product?.name || "N/A"}</p>
+            {claim.product ? (
+              <Link
+                href={`/products/${claim.product.id}`}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {claim.product.name}
+              </Link>
+            ) : (
+              <p className="text-sm">N/A</p>
+            )}
           </div>
           <div>
             <p className="text-xs font-medium text-gray-500 uppercase">

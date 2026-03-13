@@ -8,6 +8,7 @@ import Link from "next/link";
 export default function NewCustomerPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -33,6 +34,9 @@ export default function NewCustomerPage() {
     if (res.ok) {
       router.push("/customers");
       router.refresh();
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to add customer" }));
+      setError(err.error || "Failed to add customer");
     }
     setLoading(false);
   }
@@ -53,6 +57,11 @@ export default function NewCustomerPage() {
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Name <span className="text-red-500">*</span>

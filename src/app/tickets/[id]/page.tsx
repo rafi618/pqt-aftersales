@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
 interface Ticket {
@@ -19,6 +20,7 @@ interface Ticket {
   resolution: string | null;
   customerId: string;
   customer: { id: string; name: string; email: string | null; phone: string | null };
+  product: { id: string; name: string; sku: string } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,6 +34,7 @@ export default function TicketDetailPage({
   const router = useRouter();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     status: "",
     priority: "",
@@ -70,7 +73,6 @@ export default function TicketDetailPage({
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this ticket?")) return;
     const res = await fetch(`/api/tickets/${id}`, { method: "DELETE" });
     if (res.ok) {
       router.push("/tickets");
@@ -97,13 +99,21 @@ export default function TicketDetailPage({
           Back to Tickets
         </Link>
         <button
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           className="inline-flex items-center gap-2 text-sm text-red-500 hover:text-red-700"
         >
           <Trash2 className="h-4 w-4" />
           Delete
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete Ticket"
+        message={`Are you sure you want to delete ticket ${ticket.ticketNo}? This action cannot be undone.`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-start justify-between mb-6">
@@ -137,6 +147,20 @@ export default function TicketDetailPage({
             </p>
             <p className="text-sm capitalize">{ticket.category}</p>
           </div>
+          {ticket.product && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase">
+                Product
+              </p>
+              <Link
+                href={`/products/${ticket.product.id}`}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {ticket.product.name}
+              </Link>
+              <p className="text-xs text-gray-400">{ticket.product.sku}</p>
+            </div>
+          )}
           <div>
             <p className="text-xs font-medium text-gray-500 uppercase">
               Assigned To

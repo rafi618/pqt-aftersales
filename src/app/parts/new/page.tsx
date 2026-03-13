@@ -15,6 +15,7 @@ export default function NewPartPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
     partNo: "",
@@ -46,6 +47,9 @@ export default function NewPartPage() {
     if (res.ok) {
       router.push("/parts");
       router.refresh();
+    } else {
+      const err = await res.json().catch(() => ({ error: "Failed to add part" }));
+      setError(err.error || "Failed to add part");
     }
     setLoading(false);
   }
@@ -66,6 +70,11 @@ export default function NewPartPage() {
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

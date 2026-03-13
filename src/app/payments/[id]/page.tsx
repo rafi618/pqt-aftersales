@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   formatDate,
   formatCurrency,
@@ -74,6 +75,7 @@ export default function InvoiceDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
@@ -91,7 +93,6 @@ export default function InvoiceDetailPage({
   }, [id]);
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this invoice?")) return;
     const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
     if (res.ok) {
       router.push("/payments");
@@ -196,7 +197,7 @@ export default function InvoiceDetailPage({
             </button>
           )}
           <button
-            onClick={handleDelete}
+            onClick={() => setConfirmDelete(true)}
             className="inline-flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
@@ -204,6 +205,14 @@ export default function InvoiceDetailPage({
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete Invoice"
+        message={`Are you sure you want to delete invoice ${invoice.invoiceNo}? This will also delete all associated payments.`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       {/* Invoice Header Card */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
