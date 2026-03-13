@@ -7,8 +7,11 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/tickets": "Service Tickets",
   "/customers": "Customers",
+  "/products": "Products",
   "/warranty": "Warranty Claims",
   "/parts": "Parts & Inventory",
+  "/payments/monthly": "Monthly Revenue",
+  "/payments": "Payments & Invoices",
 };
 
 function getPageTitle(pathname: string): string {
@@ -16,7 +19,10 @@ function getPageTitle(pathname: string): string {
     const base = pathname.split("/").slice(0, -1).join("/");
     return `New ${pageTitles[base]?.replace(/s$/, "") || "Item"}`;
   }
-  for (const [path, title] of Object.entries(pageTitles)) {
+  // Check exact match first, then startsWith (longer paths first)
+  if (pageTitles[pathname]) return pageTitles[pathname];
+  const sorted = Object.entries(pageTitles).sort((a, b) => b[0].length - a[0].length);
+  for (const [path, title] of sorted) {
     if (pathname.startsWith(path)) return title;
   }
   return "Dashboard";

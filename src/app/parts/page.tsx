@@ -1,20 +1,68 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, Search, X } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 
-export const dynamic = "force-dynamic";
+interface Part {
+  id: string;
+  name: string;
+  partNo: string;
+  description: string | null;
+  quantity: number;
+  minStock: number;
+  unitPrice: number;
+  location: string | null;
+}
 
-export default async function PartsPage() {
-  const parts = await prisma.part.findMany({
-    include: { product: true },
-    orderBy: { createdAt: "desc" },
+export default function PartsPage() {
+  const [parts, setParts] = useState<Part[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+
+  useEffect(() => {
+    fetch("/api/parts")
+      .then((res) => res.json())
+      .then((data) => {
+        setParts(data);
+        setLoading(false);
+      });
+  }, []);
+
+  const filtered = parts.filter((p) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q ||
+      p.name.toLowerCase().includes(q) ||
+      p.partNo.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q) ||
+      p.location?.toLowerCase().includes(q);
+    const isLow = p.quantity <= p.minStock;
+    const matchesStock =
+      !stockFilter ||
+      (stockFilter === "low" && isLow) ||
+      (stockFilter === "ok" && !isLow);
+    return matchesSearch && matchesStock;
   });
+
+  const hasFilters = search || stockFilter;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">{parts.length} total parts</p>
+        <p className="text-sm text-gray-500">
+          {filtered.length} of {parts.length} parts
+        </p>
         <Link
           href="/parts/new"
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
@@ -24,6 +72,41 @@ export default async function PartsPage() {
         </Link>
       </div>
 
+      {/* Search & Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search parts..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        <select
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+          className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Stock Levels</option>
+          <option value="low">Low Stock</option>
+          <option value="ok">In Stock</option>
+        </select>
+        {hasFilters && (
+          <button
+            onClick={() => {
+              setSearch("");
+              setStockFilter("");
+            }}
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear
+          </button>
+        )}
+      </div>
+
       {parts.length === 0 ? (
         <EmptyState
           title="No parts in inventory"
@@ -31,6 +114,10 @@ export default async function PartsPage() {
           actionLabel="Add Part"
           actionHref="/parts/new"
         />
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-sm text-gray-500">
+          No parts match your filters.
+        </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
@@ -57,7 +144,7 @@ export default async function PartsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {parts.map((part) => {
+              {filtered.map((part) => {
                 const isLowStock = part.quantity <= part.minStock;
                 return (
                   <tr

@@ -10,9 +10,16 @@ interface Customer {
   name: string;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+}
+
 export default function NewTicketPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     subject: "",
@@ -20,6 +27,7 @@ export default function NewTicketPage() {
     priority: "medium",
     category: "general",
     customerId: "",
+    productId: "",
     assignedTo: "",
   });
 
@@ -27,6 +35,9 @@ export default function NewTicketPage() {
     fetch("/api/customers")
       .then((res) => res.json())
       .then(setCustomers);
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then(setProducts);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -90,6 +101,26 @@ export default function NewTicketPage() {
                 </Link>
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product
+            </label>
+            <select
+              value={form.productId}
+              onChange={(e) =>
+                setForm({ ...form, productId: e.target.value })
+              }
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">No product</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.sku})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

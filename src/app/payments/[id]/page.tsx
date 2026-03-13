@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Send,
   XCircle,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
@@ -169,6 +170,13 @@ export default function InvoiceDetailPage({
           Back to Payments
         </Link>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/payments/${id}/print`}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-800 font-medium"
+          >
+            <Printer className="h-4 w-4" />
+            Print
+          </Link>
           {invoice.status === "draft" && (
             <button
               onClick={() => handleStatusChange("sent")}

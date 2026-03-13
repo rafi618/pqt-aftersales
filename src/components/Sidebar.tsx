@@ -10,6 +10,7 @@ import {
   Package,
   DollarSign,
   BarChart3,
+  Box,
   Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Service Tickets", href: "/tickets", icon: Ticket },
   { name: "Customers", href: "/customers", icon: Users },
+  { name: "Products", href: "/products", icon: Box },
   { name: "Warranty Claims", href: "/warranty", icon: Shield },
   { name: "Parts & Inventory", href: "/parts", icon: Package },
   { name: "Payments", href: "/payments", icon: DollarSign },

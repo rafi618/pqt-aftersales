@@ -10,12 +10,21 @@ interface Customer {
   name: string;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  warrantyMonths: number;
+}
+
 export default function NewWarrantyClaimPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     customerId: "",
+    productId: "",
     issueDescription: "",
     purchaseDate: "",
     expiryDate: "",
@@ -25,6 +34,9 @@ export default function NewWarrantyClaimPage() {
     fetch("/api/customers")
       .then((res) => res.json())
       .then(setCustomers);
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then(setProducts);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -84,6 +96,35 @@ export default function NewWarrantyClaimPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product
+            </label>
+            <select
+              value={form.productId}
+              onChange={(e) => {
+                const pid = e.target.value;
+                const product = products.find((p) => p.id === pid);
+                const updates: Partial<typeof form> = { productId: pid };
+                // Auto-calculate expiry if purchase date is set
+                if (product && form.purchaseDate) {
+                  const purchase = new Date(form.purchaseDate);
+                  purchase.setMonth(purchase.getMonth() + product.warrantyMonths);
+                  updates.expiryDate = purchase.toISOString().split("T")[0];
+                }
+                setForm({ ...form, ...updates });
+              }}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">No product</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.sku}) - {p.warrantyMonths}mo warranty
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Issue Description
             </label>
             <textarea
@@ -105,9 +146,17 @@ export default function NewWarrantyClaimPage() {
               <input
                 type="date"
                 value={form.purchaseDate}
-                onChange={(e) =>
-                  setForm({ ...form, purchaseDate: e.target.value })
-                }
+                onChange={(e) => {
+                  const pd = e.target.value;
+                  const product = products.find((p) => p.id === form.productId);
+                  const updates: Partial<typeof form> = { purchaseDate: pd };
+                  if (product && pd) {
+                    const d = new Date(pd);
+                    d.setMonth(d.getMonth() + product.warrantyMonths);
+                    updates.expiryDate = d.toISOString().split("T")[0];
+                  }
+                  setForm({ ...form, ...updates });
+                }}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
