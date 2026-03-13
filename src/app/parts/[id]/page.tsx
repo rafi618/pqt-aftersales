@@ -164,14 +164,29 @@ export default function PartDetailPage({
           </div>
         </div>
 
-        {part.location && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-gray-500 uppercase">
-              Location
-            </p>
-            <p className="text-sm">{part.location}</p>
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          {part.product && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase">
+                Product
+              </p>
+              <Link
+                href={`/products/${part.product.id}`}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {part.product.name}
+              </Link>
+            </div>
+          )}
+          {part.location && (
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase">
+                Location
+              </p>
+              <p className="text-sm">{part.location}</p>
+            </div>
+          )}
+        </div>
 
         {part.description && (
           <div className="mb-6">

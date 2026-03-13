@@ -78,6 +78,7 @@ export default function InvoiceDetailPage({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
   const [paymentForm, setPaymentForm] = useState({
     amount: "",
     method: "bank_transfer",
@@ -117,6 +118,7 @@ export default function InvoiceDetailPage({
     if (!paymentForm.amount) return;
 
     setPaymentLoading(true);
+    setPaymentError("");
     const res = await fetch(`/api/invoices/${id}/payments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,6 +130,7 @@ export default function InvoiceDetailPage({
       const updated = await fetch(`/api/invoices/${id}`).then((r) => r.json());
       setInvoice(updated);
       setShowPaymentForm(false);
+      setPaymentError("");
       setPaymentForm({
         amount: "",
         method: "bank_transfer",
@@ -136,8 +139,8 @@ export default function InvoiceDetailPage({
         paymentDate: new Date().toISOString().split("T")[0],
       });
     } else {
-      const err = await res.json();
-      alert(err.error || "Failed to record payment");
+      const err = await res.json().catch(() => ({ error: "Failed to record payment" }));
+      setPaymentError(err.error || "Failed to record payment");
     }
     setPaymentLoading(false);
   }
@@ -428,6 +431,11 @@ export default function InvoiceDetailPage({
         {showPaymentForm && (
           <div className="p-5 border-b border-gray-100 bg-gray-50">
             <form onSubmit={handleRecordPayment} className="space-y-4">
+              {paymentError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                  {paymentError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
