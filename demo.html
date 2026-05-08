@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PQT After-Sales — Demo Preview</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.20.6/dist/reset.css" />
+<style>
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  #root { min-height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/dayjs@1.11.10/dayjs.min.js"></script>
+<script crossorigin src="https://unpkg.com/antd@5.20.6/dist/antd.min.js"></script>
+<script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+const { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Button, Avatar, Typography,
+        Descriptions, Divider, ConfigProvider, Space } = antd;
+const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+        ResponsiveContainer } = Recharts;
+const { Header, Sider, Content } = Layout;
+
+// ===== MOCK DATA =====
+const properties = [
+  { id: 1, name: 'Marina Heights Tower', city: 'Dubai', property_type: 'residential', total_units: 24, occupancy_rate: 87.5, status: 'active' },
+  { id: 2, name: 'Business Bay Plaza', city: 'Dubai', property_type: 'commercial', total_units: 12, occupancy_rate: 91.7, status: 'active' },
+  { id: 3, name: 'Palm Jumeirah Villas', city: 'Dubai', property_type: 'residential', total_units: 8, occupancy_rate: 75.0, status: 'active' },
+  { id: 4, name: 'Downtown Lofts', city: 'Dubai', property_type: 'mixed', total_units: 16, occupancy_rate: 81.3, status: 'active' },
+];
+const tenants = [
+  { id: 1, first_name: 'Mohammed', last_name: 'Hassan', email: 'mhassan@example.com', phone: '+971 50 555 1111', nationality: 'UAE', status: 'active' },
+  { id: 2, first_name: 'Priya', last_name: 'Sharma', email: 'priya@example.com', phone: '+971 55 555 2222', nationality: 'India', status: 'active' },
+  { id: 3, first_name: 'David', last_name: 'Lee', email: 'dlee@example.com', phone: '+971 56 555 3333', nationality: 'USA', status: 'active' },
+  { id: 4, first_name: 'Aisha', last_name: 'Ali', email: 'aisha@example.com', phone: '+971 50 555 4444', nationality: 'UAE', status: 'active' },
+];
+const owners = [
+  { id: 1, first_name: 'Ahmed', last_name: 'Al-Mansoori', email: 'ahmed@example.com', phone: '+971 50 123 4567', company_name: 'Mansoori Holdings', nationality: 'UAE', property_count: 2 },
+  { id: 2, first_name: 'Fatima', last_name: 'Al-Hashimi', email: 'fatima@hashimi.ae', phone: '+971 55 987 6543', company_name: 'Hashimi Investments', nationality: 'UAE', property_count: 1 },
+  { id: 3, first_name: 'Sara', last_name: 'Khan', email: 'sara@khan.ae', phone: '+971 56 333 4444', company_name: 'Khan Properties LLC', nationality: 'PAK', property_count: 1 },
+];
+const tickets = [
+  { id: 1, title: 'AC not cooling properly', property_name: 'Marina Heights Tower', unit_label: 'MAR-005', priority: 'high', status: 'in_progress', category: 'hvac', cost: 750, created_at: '2026-05-04' },
+  { id: 2, title: 'Leaking kitchen faucet', property_name: 'Downtown Lofts', unit_label: 'DOW-012', priority: 'medium', status: 'open', category: 'plumbing', cost: 0, created_at: '2026-05-06' },
+  { id: 3, title: 'Front door lock stuck', property_name: 'Palm Jumeirah Villas', unit_label: 'PAL-002', priority: 'urgent', status: 'in_progress', category: 'general', cost: 0, created_at: '2026-05-07' },
+  { id: 4, title: 'Light fixture flickering', property_name: 'Business Bay Plaza', unit_label: 'BUS-008', priority: 'low', status: 'resolved', category: 'electrical', cost: 300, created_at: '2026-05-01' },
+];
+const invoices = [
+  { id: 1, invoice_number: 'INV-PQT-2024-1001-202605', property_name: 'Marina Heights Tower', tenant_name: 'Mohammed Hassan', amount: 12000, tax_amount: 600, management_fee: 600, net_to_owner: 11400, due_date: '2026-05-15', status: 'paid' },
+  { id: 2, invoice_number: 'INV-PQT-2024-1002-202605', property_name: 'Business Bay Plaza', tenant_name: 'Priya Sharma', amount: 15000, tax_amount: 750, management_fee: 750, net_to_owner: 14250, due_date: '2026-05-15', status: 'pending' },
+  { id: 3, invoice_number: 'INV-PQT-2024-1003-202605', property_name: 'Palm Jumeirah Villas', tenant_name: 'David Lee', amount: 18000, tax_amount: 900, management_fee: 900, net_to_owner: 17100, due_date: '2026-05-15', status: 'overdue' },
+];
+const payouts = [
+  { id: 1, period_start: '2026-04-01', period_end: '2026-04-30', gross_rental_income: 30000, management_fee: 1500, maintenance_costs: 500, tax_amount: 1500, other_deductions: 0, net_payout: 26500, status: 'paid', paid_date: '2026-05-05', reference_number: 'PAY-202604-1234' },
+  { id: 2, period_start: '2026-03-01', period_end: '2026-03-31', gross_rental_income: 30000, management_fee: 1500, maintenance_costs: 200, tax_amount: 1500, other_deductions: 0, net_payout: 26800, status: 'paid', paid_date: '2026-04-05', reference_number: 'PAY-202603-5678' },
+  { id: 3, period_start: '2026-02-01', period_end: '2026-02-28', gross_rental_income: 30000, management_fee: 1500, maintenance_costs: 800, tax_amount: 1500, other_deductions: 0, net_payout: 26200, status: 'paid', paid_date: '2026-03-05', reference_number: 'PAY-202602-9012' },
+];
+const revenueChart = [
+  { month: 'Jun 2025', revenue: 285000, management_fees: 14250 },
+  { month: 'Jul 2025', revenue: 295000, management_fees: 14750 },
+  { month: 'Aug 2025', revenue: 290000, management_fees: 14500 },
+  { month: 'Sep 2025', revenue: 305000, management_fees: 15250 },
+  { month: 'Oct 2025', revenue: 310000, management_fees: 15500 },
+  { month: 'Nov 2025', revenue: 320000, management_fees: 16000 },
+  { month: 'Dec 2025', revenue: 315000, management_fees: 15750 },
+  { month: 'Jan 2026', revenue: 325000, management_fees: 16250 },
+  { month: 'Feb 2026', revenue: 330000, management_fees: 16500 },
+  { month: 'Mar 2026', revenue: 340000, management_fees: 17000 },
+  { month: 'Apr 2026', revenue: 345000, management_fees: 17250 },
+  { month: 'May 2026', revenue: 350000, management_fees: 17500 },
+];
+const clientChart = [
+  { month: 'Jun 2025', rental_income: 28000, management_fees: 1400, tax: 1400, maintenance_costs: 300, net_income: 24900 },
+  { month: 'Jul 2025', rental_income: 28000, management_fees: 1400, tax: 1400, maintenance_costs: 0, net_income: 25200 },
+  { month: 'Aug 2025', rental_income: 28000, management_fees: 1400, tax: 1400, maintenance_costs: 800, net_income: 24400 },
+  { month: 'Sep 2025', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 200, net_income: 26800 },
+  { month: 'Oct 2025', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 0, net_income: 27000 },
+  { month: 'Nov 2025', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 500, net_income: 26500 },
+  { month: 'Dec 2025', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 0, net_income: 27000 },
+  { month: 'Jan 2026', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 1200, net_income: 25800 },
+  { month: 'Feb 2026', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 800, net_income: 26200 },
+  { month: 'Mar 2026', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 200, net_income: 26800 },
+  { month: 'Apr 2026', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 500, net_income: 26500 },
+  { month: 'May 2026', rental_income: 30000, management_fees: 1500, tax: 1500, maintenance_costs: 0, net_income: 27000 },
+];
+
+// ===== INTERNAL PORTAL =====
+const internalMenu = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'properties', label: 'Properties' },
+  { key: 'owners', label: 'Owners' },
+  { key: 'tenants', label: 'Tenants' },
+  { key: 'maintenance', label: 'Maintenance' },
+  { key: 'invoices', label: 'Invoices' },
+  { key: 'payouts', label: 'Owner Payouts' },
+];
+
+function InternalDashboard() {
+  return (
+    <div>
+      <Typography.Title level={4}>Internal Dashboard</Typography.Title>
+      <Row gutter={[16, 16]}>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Properties" value={4} /></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Occupancy" value={84.2} suffix="%" valueStyle={{color:'#3f8600'}}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Total Units" value={60}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Active Contracts" value={51}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Expiring (90d)" value={3} valueStyle={{color:'#faad14'}}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Open Tickets" value={2}/></Card></Col>
+      </Row>
+      <Row gutter={[16, 16]} style={{marginTop:16}}>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Monthly Revenue" prefix="AED" value={350000} precision={0}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Mgmt Fees (Month)" prefix="AED" value={17500}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Overdue Invoices" value={1} valueStyle={{color:'#cf1322'}}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Owners" value={4}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Active Tenants" value={51}/></Card></Col>
+        <Col xs={12} sm={8} lg={4}><Card><Statistic title="Urgent Tickets" value={1} valueStyle={{color:'#cf1322'}}/></Card></Col>
+      </Row>
+      <Card style={{marginTop:24}} title="Revenue & Management Fees (12 Months)">
+        <ResponsiveContainer width="100%" height={350}>
+          <LineChart data={revenueChart}>
+            <CartesianGrid strokeDasharray="3 3"/>
+            <XAxis dataKey="month"/><YAxis/><Tooltip/><Legend/>
+            <Line type="monotone" dataKey="revenue" stroke="#1890ff" name="Revenue"/>
+            <Line type="monotone" dataKey="management_fees" stroke="#52c41a" name="Management Fees"/>
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+  );
+}
+
+function PropertiesPage() {
+  const cols = [
+    {title:'Name', dataIndex:'name'}, {title:'City', dataIndex:'city'},
+    {title:'Type', dataIndex:'property_type', render:v=><Tag>{v}</Tag>},
+    {title:'Units', dataIndex:'total_units'},
+    {title:'Occupancy', dataIndex:'occupancy_rate', render:v=>`${v}%`},
+    {title:'Status', dataIndex:'status', render:v=><Tag color="green">{v}</Tag>},
+  ];
+  return (<div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+      <Typography.Title level={4}>Properties</Typography.Title>
+      <Button type="primary">Add Property</Button>
+    </div>
+    <Table columns={cols} dataSource={properties} rowKey="id" pagination={false}/>
+  </div>);
+}
+
+function OwnersPage() {
+  const cols = [
+    {title:'Name', render:(_,r)=>`${r.first_name} ${r.last_name}`},
+    {title:'Email', dataIndex:'email'},{title:'Phone', dataIndex:'phone'},
+    {title:'Company', dataIndex:'company_name'}, {title:'Nationality', dataIndex:'nationality'},
+    {title:'Properties', dataIndex:'property_count'},
+  ];
+  return (<div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+      <Typography.Title level={4}>Owners</Typography.Title>
+      <Button type="primary">Add Owner</Button>
+    </div>
+    <Table columns={cols} dataSource={owners} rowKey="id" pagination={false}/>
+  </div>);
+}
+
+function TenantsPage() {
+  const cols = [
+    {title:'Name', render:(_,r)=>`${r.first_name} ${r.last_name}`},
+    {title:'Email', dataIndex:'email'},{title:'Phone', dataIndex:'phone'},
+    {title:'Nationality', dataIndex:'nationality'},
+    {title:'Status', dataIndex:'status', render:v=><Tag color="green">{v}</Tag>},
+  ];
+  return (<div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+      <Typography.Title level={4}>Tenants</Typography.Title>
+      <Button type="primary">Add Tenant</Button>
+    </div>
+    <Table columns={cols} dataSource={tenants} rowKey="id" pagination={false}/>
+  </div>);
+}
+
+function MaintenancePage() {
+  const pcolor = {low:'blue',medium:'orange',high:'red',urgent:'magenta'};
+  const scolor = {open:'orange',in_progress:'blue',resolved:'green',closed:'default'};
+  const cols = [
+    {title:'Title', dataIndex:'title'},{title:'Property', dataIndex:'property_name'},
+    {title:'Unit', dataIndex:'unit_label'},
+    {title:'Priority', dataIndex:'priority', render:v=><Tag color={pcolor[v]}>{v}</Tag>},
+    {title:'Status', dataIndex:'status', render:v=><Tag color={scolor[v]}>{v.replace('_',' ')}</Tag>},
+    {title:'Category', dataIndex:'category'},
+    {title:'Cost', dataIndex:'cost', render:v=>v>0?`AED ${v}`:'-'},
+    {title:'Created', dataIndex:'created_at'},
+  ];
+  return (<div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+      <Typography.Title level={4}>Maintenance Tickets</Typography.Title>
+      <Button type="primary">New Ticket</Button>
+    </div>
+    <Table columns={cols} dataSource={tickets} rowKey="id" pagination={false} scroll={{x:true}}/>
+  </div>);
+}
+
+function InvoicesPage() {
+  const scolor = {paid:'green',pending:'blue',overdue:'red'};
+  const cols = [
+    {title:'Invoice #', dataIndex:'invoice_number'},{title:'Property', dataIndex:'property_name'},
+    {title:'Tenant', dataIndex:'tenant_name'},
+    {title:'Amount', dataIndex:'amount', render:v=>`AED ${v.toLocaleString()}`},
+    {title:'Tax', dataIndex:'tax_amount', render:v=>`AED ${v}`},
+    {title:'Mgmt Fee', dataIndex:'management_fee', render:v=>`AED ${v}`},
+    {title:'Net to Owner', dataIndex:'net_to_owner', render:v=><strong>AED {v.toLocaleString()}</strong>},
+    {title:'Due', dataIndex:'due_date'},
+    {title:'Status', dataIndex:'status', render:v=><Tag color={scolor[v]}>{v}</Tag>},
+  ];
+  return (<div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+      <Typography.Title level={4}>Invoices</Typography.Title>
+      <Button type="primary">New Invoice</Button>
+    </div>
+    <Table columns={cols} dataSource={invoices} rowKey="id" pagination={false} scroll={{x:true}}/>
+  </div>);
+}
+
+function PayoutsPage() {
+  const cols = [
+    {title:'Period', render:(_,r)=>`${r.period_start} to ${r.period_end}`},
+    {title:'Gross Rental', dataIndex:'gross_rental_income', render:v=>`AED ${v.toLocaleString()}`},
+    {title:'Mgmt Fee', dataIndex:'management_fee', render:v=>`AED ${v}`},
+    {title:'Maintenance', dataIndex:'maintenance_costs', render:v=>v>0?`AED ${v}`:'-'},
+    {title:'Tax', dataIndex:'tax_amount', render:v=>`AED ${v}`},
+    {title:'Net Payout', dataIndex:'net_payout', render:v=><strong>AED {v.toLocaleString()}</strong>},
+    {title:'Status', dataIndex:'status', render:v=><Tag color="green">{v}</Tag>},
+    {title:'Reference', dataIndex:'reference_number'},
+  ];
+  return (<div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}>
+      <Typography.Title level={4}>Owner Payouts</Typography.Title>
+      <Button type="primary">New Payout</Button>
+    </div>
+    <Table columns={cols} dataSource={payouts} rowKey="id" pagination={false} scroll={{x:true}}/>
+  </div>);
+}
+
+function InternalPortal({ onSwitch }) {
+  const [tab, setTab] = useState('dashboard');
+  const pages = {
+    dashboard: <InternalDashboard/>, properties: <PropertiesPage/>,
+    owners: <OwnersPage/>, tenants: <TenantsPage/>,
+    maintenance: <MaintenancePage/>, invoices: <InvoicesPage/>, payouts: <PayoutsPage/>,
+  };
+  return (
+    <Layout style={{minHeight:'100vh'}}>
+      <Sider theme="dark">
+        <div style={{padding:16,textAlign:'center',color:'#fff'}}>
+          <Typography.Title level={4} style={{color:'#fff',margin:0}}>PQT AfterSales</Typography.Title>
+          <Typography.Text style={{color:'#888',fontSize:11}}>Internal Portal</Typography.Text>
+        </div>
+        <Menu theme="dark" mode="inline" selectedKeys={[tab]} items={internalMenu} onClick={({key})=>setTab(key)}/>
+      </Sider>
+      <Layout>
+        <Header style={{background:'#fff',padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <Typography.Text strong>PQT Staff Portal</Typography.Text>
+          <Space>
+            <Button onClick={onSwitch}>Switch to Client View →</Button>
+            <Avatar style={{backgroundColor:'#1677ff'}}>A</Avatar>
+            <span>PQT Admin</span>
+          </Space>
+        </Header>
+        <Content style={{margin:24,padding:24,background:'#fff',borderRadius:8}}>
+          {pages[tab]}
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}
+
+// ===== CLIENT PORTAL =====
+const clientMenu = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'properties', label: 'My Properties' },
+  { key: 'invoices', label: 'Invoices & Income' },
+  { key: 'payouts', label: 'My Payouts' },
+];
+
+function ClientDashboard() {
+  const ytd = { gross_rental_income: 354000, collected: 354000, management_fees: 17700, tax: 17700, maintenance_costs: 4500, net_income: 314100, payouts: 287400 };
+  return (
+    <div>
+      <Typography.Title level={4}>My Portfolio Dashboard</Typography.Title>
+      <Row gutter={[16,16]}>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="My Properties" value={2}/></Card></Col>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Total Units" value={32}/></Card></Col>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Occupied" value="27 / 32"/></Card></Col>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Occupancy Rate" value={84.4} suffix="%" valueStyle={{color:'#3f8600'}}/></Card></Col>
+      </Row>
+      <Row gutter={[16,16]} style={{marginTop:16}}>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Active Contracts" value={27}/></Card></Col>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Monthly Rent" prefix="AED" value={295000}/></Card></Col>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Overdue Invoices" value={0} valueStyle={{color:'#3f8600'}}/></Card></Col>
+        <Col xs={12} sm={8} lg={6}><Card><Statistic title="Open Tickets" value={1}/></Card></Col>
+      </Row>
+
+      <Divider/>
+      <Typography.Title level={5}>Year-to-Date Financial Summary</Typography.Title>
+      <Card>
+        <Descriptions bordered column={{xs:1,sm:2,lg:3}}>
+          <Descriptions.Item label="Gross Rental Income"><span style={{color:'#3f8600',fontWeight:'bold'}}>AED {ytd.gross_rental_income.toLocaleString()}</span></Descriptions.Item>
+          <Descriptions.Item label="Collected"><strong>AED {ytd.collected.toLocaleString()}</strong></Descriptions.Item>
+          <Descriptions.Item label="Management Fees"><span style={{color:'#cf1322'}}>- AED {ytd.management_fees.toLocaleString()}</span></Descriptions.Item>
+          <Descriptions.Item label="Tax / VAT"><span style={{color:'#cf1322'}}>- AED {ytd.tax.toLocaleString()}</span></Descriptions.Item>
+          <Descriptions.Item label="Maintenance Costs"><span style={{color:'#cf1322'}}>- AED {ytd.maintenance_costs.toLocaleString()}</span></Descriptions.Item>
+          <Descriptions.Item label="Net Income"><span style={{color:'#3f8600',fontWeight:'bold',fontSize:16}}>AED {ytd.net_income.toLocaleString()}</span></Descriptions.Item>
+          <Descriptions.Item label="Total Payouts Received"><strong>AED {ytd.payouts.toLocaleString()}</strong></Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      <Card style={{marginTop:24}} title="Monthly Income & Costs (12 Months)">
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={clientChart}>
+            <CartesianGrid strokeDasharray="3 3"/>
+            <XAxis dataKey="month"/><YAxis/><Tooltip/><Legend/>
+            <Bar dataKey="rental_income" fill="#1890ff" name="Rental Income"/>
+            <Bar dataKey="management_fees" fill="#ff4d4f" name="Management Fees"/>
+            <Bar dataKey="tax" fill="#faad14" name="Tax"/>
+            <Bar dataKey="maintenance_costs" fill="#722ed1" name="Maintenance"/>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card style={{marginTop:16}} title="Net Income Trend">
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={clientChart}>
+            <CartesianGrid strokeDasharray="3 3"/>
+            <XAxis dataKey="month"/><YAxis/><Tooltip/><Legend/>
+            <Line type="monotone" dataKey="net_income" stroke="#52c41a" strokeWidth={2} name="Net Income"/>
+            <Line type="monotone" dataKey="rental_income" stroke="#1890ff" strokeDasharray="5 5" name="Gross Income"/>
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+  );
+}
+
+function ClientProperties() {
+  const myProps = properties.slice(0, 2);
+  const cols = [
+    {title:'Property', dataIndex:'name'},{title:'City', dataIndex:'city'},
+    {title:'Type', dataIndex:'property_type', render:v=><Tag>{v}</Tag>},
+    {title:'Total Units', dataIndex:'total_units'},
+    {title:'Occupancy', dataIndex:'occupancy_rate', render:v=>`${v}%`},
+    {title:'Status', dataIndex:'status', render:v=><Tag color="green">{v}</Tag>},
+  ];
+  return (<div>
+    <Typography.Title level={4}>My Properties</Typography.Title>
+    <Card title="Properties"><Table columns={cols} dataSource={myProps} rowKey="id" pagination={false}/></Card>
+  </div>);
+}
+
+function ClientInvoices() {
+  const myInv = invoices.filter(i => ['Marina Heights Tower','Palm Jumeirah Villas'].includes(i.property_name));
+  const totals = myInv.reduce((s,i)=>({collected:s.collected+(i.status==='paid'?i.amount:0), fees:s.fees+(i.status==='paid'?i.management_fee:0), tax:s.tax+(i.status==='paid'?i.tax_amount:0), net:s.net+(i.status==='paid'?i.net_to_owner:0)}),{collected:0,fees:0,tax:0,net:0});
+  const scolor = {paid:'green',pending:'blue',overdue:'red'};
+  const cols = [
+    {title:'Invoice #', dataIndex:'invoice_number'},{title:'Property', dataIndex:'property_name'},
+    {title:'Tenant', dataIndex:'tenant_name'},
+    {title:'Rent', dataIndex:'amount', render:v=>`AED ${v.toLocaleString()}`},
+    {title:'Tax', dataIndex:'tax_amount', render:v=>`AED ${v}`},
+    {title:'Mgmt Fee', dataIndex:'management_fee', render:v=>`AED ${v}`},
+    {title:'Net to You', dataIndex:'net_to_owner', render:v=><strong>AED {v.toLocaleString()}</strong>},
+    {title:'Due', dataIndex:'due_date'},
+    {title:'Status', dataIndex:'status', render:v=><Tag color={scolor[v]}>{v}</Tag>},
+  ];
+  return (<div>
+    <Typography.Title level={4}>Invoices & Income</Typography.Title>
+    <Card style={{marginBottom:24}}>
+      <Descriptions bordered column={{xs:1,sm:2,lg:4}}>
+        <Descriptions.Item label="Total Collected"><strong>AED {totals.collected.toLocaleString()}</strong></Descriptions.Item>
+        <Descriptions.Item label="Management Fees"><span style={{color:'#cf1322'}}>AED {totals.fees.toLocaleString()}</span></Descriptions.Item>
+        <Descriptions.Item label="Tax"><span style={{color:'#cf1322'}}>AED {totals.tax.toLocaleString()}</span></Descriptions.Item>
+        <Descriptions.Item label="Net to You"><span style={{color:'#3f8600',fontWeight:'bold'}}>AED {totals.net.toLocaleString()}</span></Descriptions.Item>
+      </Descriptions>
+    </Card>
+    <Table columns={cols} dataSource={myInv} rowKey="id" pagination={false} scroll={{x:true}}/>
+  </div>);
+}
+
+function ClientPayouts() {
+  const cols = [
+    {title:'Period', render:(_,r)=>`${r.period_start} to ${r.period_end}`},
+    {title:'Gross Rental', dataIndex:'gross_rental_income', render:v=>`AED ${v.toLocaleString()}`},
+    {title:'Mgmt Fee', dataIndex:'management_fee', render:v=><span style={{color:'#cf1322'}}>- AED {v}</span>},
+    {title:'Maintenance', dataIndex:'maintenance_costs', render:v=>v>0?<span style={{color:'#cf1322'}}>- AED {v}</span>:'-'},
+    {title:'Tax', dataIndex:'tax_amount', render:v=><span style={{color:'#cf1322'}}>- AED {v}</span>},
+    {title:'Net Payout', dataIndex:'net_payout', render:v=><strong style={{color:'#3f8600'}}>AED {v.toLocaleString()}</strong>},
+    {title:'Status', dataIndex:'status', render:v=><Tag color="green">{v}</Tag>},
+    {title:'Paid Date', dataIndex:'paid_date'},
+  ];
+  const totalPaid = payouts.reduce((s,p)=>s+p.net_payout, 0);
+  const totalGross = payouts.reduce((s,p)=>s+p.gross_rental_income, 0);
+  const totalDeductions = payouts.reduce((s,p)=>s+p.management_fee+p.maintenance_costs+p.tax_amount, 0);
+  return (<div>
+    <Typography.Title level={4}>My Payouts</Typography.Title>
+    <Card style={{marginBottom:24}}>
+      <Descriptions bordered column={{xs:1,sm:3}}>
+        <Descriptions.Item label="Total Gross Income"><strong>AED {totalGross.toLocaleString()}</strong></Descriptions.Item>
+        <Descriptions.Item label="Total Deductions"><span style={{color:'#cf1322'}}>AED {totalDeductions.toLocaleString()}</span></Descriptions.Item>
+        <Descriptions.Item label="Total Paid Out"><span style={{color:'#3f8600',fontWeight:'bold',fontSize:16}}>AED {totalPaid.toLocaleString()}</span></Descriptions.Item>
+      </Descriptions>
+    </Card>
+    <Table columns={cols} dataSource={payouts} rowKey="id" pagination={false} scroll={{x:true}}/>
+  </div>);
+}
+
+function ClientPortal({ onSwitch }) {
+  const [tab, setTab] = useState('dashboard');
+  const pages = {
+    dashboard: <ClientDashboard/>, properties: <ClientProperties/>,
+    invoices: <ClientInvoices/>, payouts: <ClientPayouts/>,
+  };
+  return (
+    <Layout style={{minHeight:'100vh'}}>
+      <Sider theme="dark" style={{background:'#001529'}}>
+        <div style={{padding:16,textAlign:'center',color:'#fff'}}>
+          <Typography.Title level={4} style={{color:'#fff',margin:0}}>PQT Client</Typography.Title>
+          <Typography.Text style={{color:'#888',fontSize:11}}>Owner Portal</Typography.Text>
+        </div>
+        <Menu theme="dark" mode="inline" selectedKeys={[tab]} items={clientMenu} onClick={({key})=>setTab(key)}/>
+      </Sider>
+      <Layout>
+        <Header style={{background:'#fff',padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <Typography.Text strong>Welcome back, Ahmed Al-Mansoori</Typography.Text>
+          <Space>
+            <Button onClick={onSwitch}>← Switch to Internal View</Button>
+            <Avatar style={{backgroundColor:'#52c41a'}}>A</Avatar>
+            <span>Ahmed Al-Mansoori</span>
+          </Space>
+        </Header>
+        <Content style={{margin:24,padding:24,background:'#fff',borderRadius:8}}>
+          {pages[tab]}
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}
+
+// ===== ROOT =====
+function App() {
+  const [view, setView] = useState('internal'); // 'internal' | 'client'
+  return (
+    <ConfigProvider theme={{token:{colorPrimary:'#1677ff',borderRadius:6}}}>
+      {view === 'internal'
+        ? <InternalPortal onSwitch={()=>setView('client')}/>
+        : <ClientPortal onSwitch={()=>setView('internal')}/>
+      }
+    </ConfigProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+</body>
+</html>
