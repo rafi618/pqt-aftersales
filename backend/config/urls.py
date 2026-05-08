@@ -1,8 +1,11 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+from .frontend import FrontendAppView, FrontendAssetView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,6 +19,13 @@ urlpatterns = [
     # API docs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    # Frontend static assets (built by Vite into frontend/dist/assets)
+    re_path(r'^assets/(?P<path>.*)$', serve, {'document_root': settings.FRONTEND_DIST / 'assets'}),
+    # Frontend public files (favicon, etc.)
+    re_path(r'^(?P<path>(favicon\.svg|icons\.svg|vite\.svg))$', FrontendAssetView.as_view()),
+    # SPA catch-all - must be LAST. Serves React app for all other routes.
+    re_path(r'^.*$', FrontendAppView.as_view(), name='frontend'),
 ]
 
 if settings.DEBUG:
