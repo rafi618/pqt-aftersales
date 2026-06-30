@@ -6,6 +6,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import DocumentSection from "@/components/DocumentSection";
 import { formatDate } from "@/lib/utils";
 
 interface Ticket {
@@ -21,6 +22,15 @@ interface Ticket {
   customerId: string;
   customer: { id: string; name: string; email: string | null; phone: string | null };
   product: { id: string; name: string; sku: string } | null;
+  documents: {
+    id: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    filePath: string;
+    label: string | null;
+    createdAt: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -42,7 +52,7 @@ export default function TicketDetailPage({
     resolution: "",
   });
 
-  useEffect(() => {
+  function loadTicket() {
     fetch(`/api/tickets/${id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -54,6 +64,10 @@ export default function TicketDetailPage({
           resolution: data.resolution || "",
         });
       });
+  }
+
+  useEffect(() => {
+    loadTicket();
   }, [id]);
 
   async function handleUpdate() {
@@ -275,6 +289,13 @@ export default function TicketDetailPage({
             </div>
           </div>
         )}
+
+        <DocumentSection
+          documents={ticket.documents}
+          entityType="ticketId"
+          entityId={ticket.id}
+          onUpdate={loadTicket}
+        />
       </div>
     </div>
   );

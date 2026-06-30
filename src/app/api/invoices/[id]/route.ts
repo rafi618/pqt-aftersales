@@ -13,6 +13,7 @@ export async function GET(
       items: { include: { part: true } },
       payments: { orderBy: { paymentDate: "desc" } },
       ticket: true,
+      documents: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!invoice) {

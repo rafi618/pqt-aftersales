@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import DocumentSection from "@/components/DocumentSection";
 import {
   formatDate,
   formatCurrency,
@@ -65,6 +66,15 @@ interface Invoice {
   items: InvoiceItem[];
   payments: Payment[];
   ticket: { id: string; ticketNo: string; subject: string } | null;
+  documents: {
+    id: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    filePath: string;
+    label: string | null;
+    createdAt: string;
+  }[];
 }
 
 export default function InvoiceDetailPage({
@@ -87,10 +97,14 @@ export default function InvoiceDetailPage({
     paymentDate: new Date().toISOString().split("T")[0],
   });
 
-  useEffect(() => {
+  function loadInvoice() {
     fetch(`/api/invoices/${id}`)
       .then((res) => res.json())
       .then(setInvoice);
+  }
+
+  useEffect(() => {
+    loadInvoice();
   }, [id]);
 
   async function handleDelete() {
@@ -582,6 +596,13 @@ export default function InvoiceDetailPage({
             ))
           )}
         </div>
+
+        <DocumentSection
+          documents={invoice.documents}
+          entityType="invoiceId"
+          entityId={invoice.id}
+          onUpdate={loadInvoice}
+        />
       </div>
     </div>
   );

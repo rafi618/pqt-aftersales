@@ -8,7 +8,7 @@ export async function GET(
   const { id } = await params;
   const claim = await prisma.warrantyClaim.findUnique({
     where: { id },
-    include: { customer: true, product: true },
+    include: { customer: true, product: true, documents: { orderBy: { createdAt: "desc" } } },
   });
   if (!claim) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

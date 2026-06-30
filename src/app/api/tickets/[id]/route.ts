@@ -8,7 +8,7 @@ export async function GET(
   const { id } = await params;
   const ticket = await prisma.ticket.findUnique({
     where: { id },
-    include: { customer: true, product: true },
+    include: { customer: true, product: true, documents: { orderBy: { createdAt: "desc" } } },
   });
   if (!ticket) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

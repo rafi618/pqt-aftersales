@@ -58,6 +58,7 @@ model Ticket {
   product     Product? @relation(fields: [productId], references: [id])
 
   invoices    Invoice[]
+  documents   Document[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -77,6 +78,8 @@ model WarrantyClaim {
 
   productId       String?
   product         Product? @relation(fields: [productId], references: [id])
+
+  documents       Document[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -123,6 +126,7 @@ model Invoice {
 
   items         InvoiceItem[]
   payments      Payment[]
+  documents     Document[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -155,4 +159,24 @@ model Payment {
   invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   createdAt     DateTime @default(now())
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  filePath    String
+  label       String?
+
+  ticketId    String?
+  ticket      Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  warrantyClaimId String?
+  warrantyClaim   WarrantyClaim? @relation(fields: [warrantyClaimId], references: [id], onDelete: Cascade)
+
+  invoiceId   String?
+  invoice     Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
 }

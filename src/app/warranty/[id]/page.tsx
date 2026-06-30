@@ -6,6 +6,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import DocumentSection from "@/components/DocumentSection";
 import { formatDate } from "@/lib/utils";
 
 interface Claim {
@@ -18,6 +19,15 @@ interface Claim {
   expiryDate: string | null;
   customer: { id: string; name: string };
   product: { id: string; name: string } | null;
+  documents: {
+    id: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    filePath: string;
+    label: string | null;
+    createdAt: string;
+  }[];
   createdAt: string;
 }
 
@@ -36,7 +46,7 @@ export default function WarrantyDetailPage({
     resolution: "",
   });
 
-  useEffect(() => {
+  function loadClaim() {
     fetch(`/api/warranty/${id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -46,6 +56,10 @@ export default function WarrantyDetailPage({
           resolution: data.resolution || "",
         });
       });
+  }
+
+  useEffect(() => {
+    loadClaim();
   }, [id]);
 
   async function handleUpdate() {
@@ -244,6 +258,13 @@ export default function WarrantyDetailPage({
             </div>
           </div>
         )}
+
+        <DocumentSection
+          documents={claim.documents}
+          entityType="warrantyClaimId"
+          entityId={claim.id}
+          onUpdate={loadClaim}
+        />
       </div>
     </div>
   );
