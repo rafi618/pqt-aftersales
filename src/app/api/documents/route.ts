@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -30,22 +28,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDir, { recursive: true });
-
-  const ext = path.extname(file.name);
-  const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-  const filePath = path.join(uploadDir, uniqueName);
-
   const bytes = await file.arrayBuffer();
-  await writeFile(filePath, Buffer.from(bytes));
+  const buffer = Buffer.from(bytes);
 
   const doc = await prisma.document.create({
     data: {
       fileName: file.name,
       fileSize: file.size,
       mimeType: file.type,
-      filePath: `/uploads/${uniqueName}`,
+      filePath: "",
+      fileData: buffer,
       label: label || null,
       ticketId: ticketId || null,
       warrantyClaimId: warrantyClaimId || null,
@@ -53,5 +45,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(doc, { status: 201 });
+  await prisma.document.update({
+    where: { id: doc.id },
+    data: { filePath: `/api/documents/${doc.id}/download` },
+  });
+
+  return NextResponse.json({ ...doc, filePath: `/api/documents/${doc.id}/download` }, { status: 201 });
 }
