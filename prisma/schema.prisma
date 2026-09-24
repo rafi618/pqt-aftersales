@@ -95,3 +95,87 @@ model Part {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ─────────────────────────────────────────────────────────────
+// Client Document Archive
+// ─────────────────────────────────────────────────────────────
+
+model Client {
+  id          String   @id @default(cuid())
+  seq         Int      @unique
+  clientCode  String   @unique // e.g. PQT-0012 — printed on every tag
+  name        String
+  email       String?
+  phone       String?
+  nationality String?
+  passportNo  String?
+  properties  String? // free text: project / block / flat numbers
+  notes       String?
+  docSeq      Int      @default(0) // running counter for document reference codes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documents  Document[]
+  shareLinks ShareLink[]
+}
+
+model Document {
+  id            String    @id @default(cuid())
+  refCode       String    @unique // permanent reference, e.g. PQT-0012-0004
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  section       String // legal | property | citizenship | aftersales | invoices | unsorted
+  category      String // category id from src/lib/archive/taxonomy.ts
+  title         String
+  notes         String?
+  unitRef       String? // flat / unit the document relates to
+  docDate       String? // date written on the document (YYYY-MM-DD) if known
+  originalName  String
+  storedPath    String // relative to the storage root, never changes
+  mimeType      String
+  sizeBytes     Int
+  sha256        String
+  uploadedBy    String?
+  uploadSource  String    @default("staff") // staff | link
+  classifiedBy  String    @default("rules") // ai | rules | manual
+  aiConfidence  Float?
+  aiReason      String?
+  status        String    @default("active") // active | superseded | retired
+  statusReason  String?
+  version       Int       @default(1)
+  previousId    String?
+  tagPrintedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([clientId, section])
+  @@index([sha256])
+}
+
+model ShareLink {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  kind       String // upload | download
+  label      String?
+  clientId   String? // null = any client
+  client     Client?   @relation(fields: [clientId], references: [id])
+  section    String? // optional: restrict a download link to one section
+  expiresAt  DateTime?
+  revoked    Boolean   @default(false)
+  uses       Int       @default(0)
+  createdAt  DateTime  @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String // client.create, doc.upload, doc.download, doc.recategorize, doc.retire, link.create ...
+  actor      String? // staff | link:<label> | uploader name
+  clientId   String?
+  documentId String?
+  detail     String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+  @@index([clientId])
+}

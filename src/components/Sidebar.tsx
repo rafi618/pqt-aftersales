@@ -8,10 +8,19 @@ import {
   Users,
   Shield,
   Package,
-  Settings,
-  Wrench,
+  FolderArchive,
+  Upload,
+  Link2,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const archiveNav = [
+  { name: "Client Archive", href: "/archive", icon: FolderArchive, exact: true },
+  { name: "Upload Documents", href: "/archive/upload", icon: Upload },
+  { name: "Share Links", href: "/archive/links", icon: Link2 },
+  { name: "Activity Log", href: "/archive/activity", icon: History },
+];
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -27,14 +36,42 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white">
       <div className="flex h-16 items-center gap-2 px-6 border-b border-slate-700">
-        <Wrench className="h-8 w-8 text-blue-400" />
+        <FolderArchive className="h-8 w-8 text-blue-400" />
         <div>
           <h1 className="text-lg font-bold tracking-tight">PQT</h1>
-          <p className="text-xs text-slate-400 -mt-1">After-Sales</p>
+          <p className="text-xs text-slate-400 -mt-1">Client Archive</p>
         </div>
       </div>
 
       <nav className="mt-6 px-3 space-y-1">
+        <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          Documents
+        </p>
+        {archiveNav.map((item) => {
+          const isActive = item.exact
+            ? pathname === item.href ||
+              pathname.startsWith("/archive/clients") ||
+              pathname.startsWith("/archive/documents")
+            : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.name}
+            </Link>
+          );
+        })}
+        <p className="px-3 pt-5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          After-Sales
+        </p>
         {navigation.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -62,8 +99,8 @@ export default function Sidebar() {
             A
           </div>
           <div>
-            <p className="text-sm font-medium">Admin User</p>
-            <p className="text-xs text-slate-400">admin@pqt.com</p>
+            <p className="text-sm font-medium">PQT Staff</p>
+            <p className="text-xs text-slate-400">Property Quest Turkey</p>
           </div>
         </div>
       </div>
