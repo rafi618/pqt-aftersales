@@ -58,6 +58,9 @@ export default async function ClientFile({
           <Link href={`/archive/tags?client=${client.id}`} target="_blank" className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50">
             <Printer className="h-4 w-4" /> Print all tags
           </Link>
+          <Link href={`/invoices/new?client=${client.id}`} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+            <Receipt className="h-4 w-4" /> Create invoice
+          </Link>
           <Link href={`/invoices?client=${client.id}`} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50">
             <Receipt className="h-4 w-4" /> Invoices ({client._count.invoices}) · Vouchers ({client._count.vouchers})
           </Link>

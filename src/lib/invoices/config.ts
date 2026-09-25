@@ -50,6 +50,10 @@ export interface LineItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  // set when the line comes from a voucher
+  category?: string;
+  details?: string;
+  voucherId?: string | null;
 }
 
 export function computeTotals(items: LineItem[], vatRate: number) {
@@ -73,4 +77,10 @@ export function todayISO() {
 
 export function daysFromTodayISO(days: number) {
   return new Date(Date.now() + days * 86400_000).toISOString().slice(0, 10);
+}
+
+let keySeq = 0;
+/** Unique key for a row in the invoice form. */
+export function newKey() {
+  return `r${Date.now()}_${keySeq++}`;
 }

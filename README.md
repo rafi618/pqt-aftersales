@@ -30,14 +30,14 @@ agent files each one in the right folder with a permanent reference number.
 
 Invoices are kept apart from the client document folders, under **Invoices** in the menu.
 
-- **Create an invoice:**
-  - Pick a client, or type any customer.
-  - Add lines, VAT and currency (USD / EUR / GBP / TRY). The total adds itself up.
-  - Save as a draft, or issue it straight away.
+- **Create an invoice with its vouchers:**
+  1. Open the client's folder and click **Create invoice**, or use Create Invoice in the menu and pick the client. A client is required, so every invoice is saved under a client code.
+  2. Click **Add voucher**, attach the receipt, and enter the **purpose** and **cost**. The agent pre-fills them from the receipt; staff check them.
+  3. Add lines without a receipt (e.g. PQT's own fee) if needed. Set VAT and currency; the total adds itself up.
+  4. Click **Generate invoice**. Each receipt is saved as a voucher (`PQT-VCH-…`) in that client's record and printed as a line on the invoice (`PQT-INV-2026-0001`, `0002` … with no gaps).
   - The PDF carries the PQT logo, company details and tax number.
-  - Invoices are numbered `PQT-INV-2026-0001`, `0002` … with no gaps.
-- **Upload vouchers:** receipts, bills, bank slips, photos. Each one gets a `PQT-VCH-…` number. The AI agent (or the file name, without a key) reads the category, vendor, amount and date.
-- **Create an invoice from vouchers:** tick any vouchers and they become invoice lines, with the receipts attached.
+  - The same receipt can't be billed on two invoices.
+- **Upload vouchers on their own:** receipts, bills, bank slips, photos, for billing later. Each one gets a `PQT-VCH-…` number. The AI agent (or the file name, without a key) reads the category, vendor, amount and date.
 - **Upload invoices made elsewhere:** PQT's official e-Arşiv / e-Fatura PDFs, or invoices from suppliers.
 - **Share:**
   - Each invoice can get a private link, where the customer views and downloads the PDF.

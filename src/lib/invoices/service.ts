@@ -38,6 +38,9 @@ export function cleanItems(raw: unknown): LineItem[] {
       description: String(i?.description ?? "").trim(),
       quantity: Number(i?.quantity) || 0,
       unitPrice: Number(i?.unitPrice) || 0,
+      ...(i?.category ? { category: String(i.category) } : {}),
+      ...(i?.details ? { details: String(i.details) } : {}),
+      ...(i?.voucherId ? { voucherId: String(i.voucherId) } : {}),
     }))
     .filter((i) => i.description || i.unitPrice);
 }
@@ -243,4 +246,133 @@ export async function createInvoice(input: {
     ip: input.ip,
   });
   return inv;
+}
+
+/**
+ * Stores a voucher whose purpose and cost were typed by staff while making an invoice.
+ * If the same file was uploaded before and is not yet on another invoice, that voucher is reused.
+ */
+export async function storeManualVoucher(opts: {
+  file: File;
+  clientId: string;
+  category: string;
+  description: string;
+  amount: number;
+  currency: string;
+  invoiceId?: string | null;
+  uploadedBy?: string | null;
+  ip?: string | null;
+}): Promise<{ id: string; refCode: string }> {
+  const fileName = opts.file.name || "voucher";
+  if (opts.file.size === 0) throw new Error(`${fileName} is empty`);
+  if (opts.file.size > MAX_FILE_BYTES) throw new Error(`${fileName} is larger than 100 MB`);
+  const { data, hash, mimeType } = await readFile(opts.file);
+  const fields = {
+    clientId: opts.clientId,
+    category: opts.category,
+    description: opts.description || null,
+    amount: opts.amount,
+    currency: opts.currency,
+    extractedBy: "manual",
+  };
+  const dup = await prisma.voucher.findFirst({ where: { sha256: hash, status: "active" } });
+  if (dup) {
+    if (dup.invoiceId && dup.invoiceId !== opts.invoiceId) {
+      const other = await prisma.invoice.findUnique({ where: { id: dup.invoiceId } });
+      throw new Error(`${fileName} is already on invoice ${other?.number ?? ""} (${dup.refCode})`);
+    }
+    await prisma.voucher.update({ where: { id: dup.id }, data: fields });
+    return { id: dup.id, refCode: dup.refCode };
+  }
+  const refCode = `PQT-VCH-${String(await nextSeq("voucher")).padStart(4, "0")}`;
+  const storedPath = await writeArchiveFile("_vouchers", refCode, fileName, data);
+  const v = await prisma.voucher.create({
+    data: {
+      ...fields,
+      refCode,
+      storedPath,
+      originalName: fileName,
+      mimeType,
+      sizeBytes: data.length,
+      sha256: hash,
+      uploadedBy: opts.uploadedBy || "staff",
+      uploadSource: "staff",
+      aiReason: "Purpose and cost entered by staff while creating an invoice.",
+    },
+  });
+  await audit({
+    action: "voucher.upload",
+    actor: opts.uploadedBy || "staff",
+    clientId: opts.clientId,
+    voucherId: v.id,
+    detail: `${refCode} ${fileName} (${voucherCategoryLabel(opts.category)}, ${opts.amount} ${opts.currency})`,
+    ip: opts.ip,
+  });
+  return { id: v.id, refCode };
+}
+
+export interface ComposeRow {
+  category: string;
+  details: string;
+  amount: number;
+  voucherId?: string | null; // an existing voucher
+  fileIndex?: number | null; // a new file sent with the form
+}
+
+/** Invoice line text: "Notary – power of attorney fee (PQT-VCH-0002)". */
+export function rowDescription(category: string, details: string, refCode?: string | null) {
+  const label = category && category !== "none" ? voucherCategoryLabel(category).replace(/\s*\(.*\)$/, "") : "";
+  const text = [label, details.trim()].filter(Boolean).join(" – ") || "Service";
+  return refCode ? `${text} (${refCode})` : text;
+}
+
+/** Turns the invoice form's rows (+ uploaded receipt files) into vouchers and invoice lines. */
+export async function rowsToItems(opts: {
+  rows: ComposeRow[];
+  files: File[];
+  clientId: string;
+  currency: string;
+  invoiceId?: string | null;
+  ip?: string | null;
+}): Promise<{ items: LineItem[]; voucherIds: string[] }> {
+  const items: LineItem[] = [];
+  const voucherIds: string[] = [];
+  for (const r of opts.rows) {
+    const amount = Number(r.amount) || 0;
+    const details = String(r.details ?? "");
+    const category = String(r.category ?? "none");
+    let voucher: { id: string; refCode: string } | null = null;
+    if (r.fileIndex != null && opts.files[r.fileIndex]) {
+      voucher = await storeManualVoucher({
+        file: opts.files[r.fileIndex],
+        clientId: opts.clientId,
+        category: category === "none" ? "other" : category,
+        description: details,
+        amount,
+        currency: opts.currency,
+        invoiceId: opts.invoiceId,
+        ip: opts.ip,
+      });
+    } else if (r.voucherId) {
+      const v = await prisma.voucher.findUnique({ where: { id: r.voucherId } });
+      if (v) {
+        await prisma.voucher.update({
+          where: { id: v.id },
+          data: { clientId: opts.clientId, category: category === "none" ? v.category : category, description: details || v.description, amount, currency: opts.currency },
+        });
+        voucher = { id: v.id, refCode: v.refCode };
+      }
+    }
+    if (!details && !amount && !voucher) continue;
+    if (voucher) voucherIds.push(voucher.id);
+    items.push({
+      description: rowDescription(category, details, voucher?.refCode),
+      quantity: 1,
+      unitPrice: amount,
+      category,
+      details,
+      voucherId: voucher?.id ?? null,
+    });
+  }
+  return { items, voucherIds };
 }
