@@ -26,6 +26,7 @@ export default function UploadBox({
   clientNames = [],
   showDetails = true,
   compact = false,
+  clientRequired = true,
 }: {
   endpoint: string;
   clientId?: string;
@@ -34,6 +35,7 @@ export default function UploadBox({
   clientNames?: string[];
   showDetails?: boolean;
   compact?: boolean;
+  clientRequired?: boolean;
 }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -55,7 +57,7 @@ export default function UploadBox({
 
   async function submit() {
     setError("");
-    if (askClientName && !clientName.trim()) return setError("Please type the client's full name.");
+    if (askClientName && clientRequired && !clientName.trim()) return setError("Please type the client's full name.");
     if (askUploaderName && !uploader.trim()) return setError("Please type your name.");
     if (files.length === 0) return setError("Add at least one file.");
     setBusy(true);
@@ -87,7 +89,7 @@ export default function UploadBox({
         <div className="grid gap-3 sm:grid-cols-2">
           {askClientName && (
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Client full name *</span>
+              <span className="text-sm font-medium text-gray-700">Client full name{clientRequired ? " *" : " (if it is for a client)"}</span>
               <input
                 list="client-names"
                 value={clientName}
@@ -184,7 +186,7 @@ export default function UploadBox({
       {results && (
         <div className="rounded-lg bg-gray-50 border border-gray-200 p-3">
           <p className="text-sm font-medium text-gray-800 mb-2">
-            Filed for {resultClient}:
+            {resultClient ? `Filed for ${resultClient}:` : "Received:"}
           </p>
           <ul className="space-y-1.5">
             {results.map((r, i) => (

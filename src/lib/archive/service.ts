@@ -11,6 +11,8 @@ export async function audit(entry: {
   actor?: string | null;
   clientId?: string | null;
   documentId?: string | null;
+  invoiceId?: string | null;
+  voucherId?: string | null;
   detail?: string | null;
   ip?: string | null;
 }) {
@@ -199,7 +201,7 @@ export function newToken(): string {
   return crypto.randomBytes(18).toString("base64url");
 }
 
-export async function getValidLink(token: string, kind: "upload" | "download") {
+export async function getValidLink(token: string, kind: "upload" | "download" | "invoice" | "voucher-upload") {
   const link = await prisma.shareLink.findUnique({
     where: { token },
     include: { client: true },

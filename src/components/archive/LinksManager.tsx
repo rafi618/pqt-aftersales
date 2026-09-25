@@ -11,6 +11,7 @@ interface Link {
   kind: string;
   label: string | null;
   clientName: string | null;
+  invoiceNumber: string | null;
   section: string | null;
   expiresAt: string | null;
   revoked: boolean;
@@ -24,7 +25,8 @@ export default function LinksManager({ links, clients }: { links: Link[]; client
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
 
-  const url = (l: Link) => `${typeof window !== "undefined" ? window.location.origin : ""}/s/${l.kind === "upload" ? "u" : "d"}/${l.token}`;
+  const PATH: Record<string, string> = { upload: "u", download: "d", invoice: "i", "voucher-upload": "v" };
+  const url = (l: Link) => `${typeof window !== "undefined" ? window.location.origin : ""}/s/${PATH[l.kind]}/${l.token}`;
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
@@ -57,12 +59,13 @@ export default function LinksManager({ links, clients }: { links: Link[]; client
           <select className={input} value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
             <option value="upload">Upload (send us documents)</option>
             <option value="download">Download (view & save documents)</option>
+            <option value="voucher-upload">Voucher upload (send receipts to accounts)</option>
           </select>
         </label>
         <label>
           <span className="text-xs font-medium text-gray-600">Client</span>
           <select className={input} value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
-            {form.kind === "upload" && <option value="">Any client (uploader types the name)</option>}
+            {form.kind !== "download" && <option value="">Any client (uploader types the name)</option>}
             {form.kind === "download" && <option value="">— choose client —</option>}
             {clients.map((c) => (
               <option key={c.id} value={c.id}>{c.name} ({c.clientCode})</option>
@@ -127,13 +130,13 @@ export default function LinksManager({ links, clients }: { links: Link[]; client
               return (
                 <tr key={l.id} className={dead ? "opacity-50" : ""}>
                   <td className="px-4 py-2.5">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${l.kind === "upload" ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800"}`}>
-                      {l.kind === "upload" ? <Upload className="h-3 w-3" /> : <Download className="h-3 w-3" />} {l.kind}
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${l.kind.includes("upload") ? "bg-emerald-100 text-emerald-800" : l.kind === "invoice" ? "bg-violet-100 text-violet-800" : "bg-sky-100 text-sky-800"}`}>
+                      {l.kind.includes("upload") ? <Upload className="h-3 w-3" /> : <Download className="h-3 w-3" />} {l.kind}
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
                     <p className="font-medium">{l.label || "—"}</p>
-                    <p className="text-xs text-gray-500">{l.clientName ?? "Any client"}{l.section ? ` · ${l.section}` : ""}</p>
+                    <p className="text-xs text-gray-500">{l.invoiceNumber ? `Invoice ${l.invoiceNumber}` : l.clientName ?? "Any client"}{l.section ? ` · ${l.section}` : ""}</p>
                   </td>
                   <td className="px-4 py-2.5">
                     <button
@@ -143,7 +146,7 @@ export default function LinksManager({ links, clients }: { links: Link[]; client
                       }}
                       className="inline-flex items-center gap-1 font-mono text-xs text-blue-700 hover:underline"
                     >
-                      /s/{l.kind === "upload" ? "u" : "d"}/{l.token.slice(0, 8)}…
+                      /s/{PATH[l.kind]}/{l.token.slice(0, 8)}…
                       {copied === l.id ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                     </button>
                   </td>

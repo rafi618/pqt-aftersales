@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Download, Printer, Folder, FolderOpen, FileText, Mail, Phone, Flag, Home, CheckCircle2, Circle, Tag } from "lucide-react";
+import { Receipt, Download, Printer, Folder, FolderOpen, FileText, Mail, Phone, Flag, Home, CheckCircle2, Circle, Tag } from "lucide-react";
 import { SECTIONS, CBI_CHECKLIST, getSection } from "@/lib/archive/taxonomy";
 import { formatBytes } from "@/lib/archive/storage";
 import { formatDate, cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ export default async function ClientFile({
   const { section: sectionParam, retired } = await searchParams;
   const client = await prisma.client.findUnique({
     where: { id },
-    include: { documents: { orderBy: { refCode: "asc" } } },
+    include: { documents: { orderBy: { refCode: "asc" } }, _count: { select: { invoices: true, vouchers: true } } },
   });
   if (!client) notFound();
 
@@ -57,6 +57,9 @@ export default async function ClientFile({
           </a>
           <Link href={`/archive/tags?client=${client.id}`} target="_blank" className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50">
             <Printer className="h-4 w-4" /> Print all tags
+          </Link>
+          <Link href={`/invoices?client=${client.id}`} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50">
+            <Receipt className="h-4 w-4" /> Invoices ({client._count.invoices}) · Vouchers ({client._count.vouchers})
           </Link>
           <QuickLink clientId={client.id} clientName={client.name} kind="upload" />
           <QuickLink clientId={client.id} clientName={client.name} kind="download" />

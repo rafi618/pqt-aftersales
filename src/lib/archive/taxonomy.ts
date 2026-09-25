@@ -7,7 +7,6 @@ export type SectionId =
   | "property"
   | "citizenship"
   | "aftersales"
-  | "invoices"
   | "unsorted";
 
 export interface Category {
@@ -115,22 +114,6 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
-    id: "invoices",
-    code: "IN",
-    label: "Invoices & Finance",
-    description: "All invoices, receipts and money-related paperwork",
-    color: "bg-sky-100 text-sky-800",
-    categories: [
-      { id: "commission-invoice", label: "Commission Invoice", keywords: ["commission", "komisyon"] },
-      { id: "service-invoice", label: "Service Invoice", keywords: ["service invoice", "hizmet faturasi", "hizmet faturası"] },
-      { id: "developer-invoice", label: "Developer / Sales Invoice", keywords: ["developer invoice", "satis faturasi", "satış faturası"] },
-      { id: "tapu-fees", label: "Title Deed Fees & Taxes (Tapu Harcı)", keywords: ["tapu harci", "tapu harcı", "doner sermaye", "döner sermaye", "stamp duty"] },
-      { id: "payment-receipt", weak: true, label: "Payment Receipt / Dekont", keywords: ["receipt", "dekont", "makbuz", "payment proof"] },
-      { id: "credit-note", label: "Refund / Credit Note", keywords: ["refund", "credit note", "iade"] },
-      { id: "invoice-other", weak: true, label: "Other Invoice", keywords: ["invoice", "fatura", "e-fatura", "e-arsiv", "e-arşiv", "bill"] },
-    ],
-  },
-  {
     id: "unsorted",
     code: "UN",
     label: "Needs Review",
@@ -163,7 +146,7 @@ export const CBI_CHECKLIST: { step: string; categories: string[] }[] = [
   { step: "Passport copies (applicant + family)", categories: ["passport"] },
   { step: "Sworn translations of foreign documents", categories: ["translation"] },
   { step: "Tax number (Vergi No)", categories: ["tax-number"] },
-  { step: "Bank transfer / SWIFT proof", categories: ["bank-transfer", "payment-receipt"] },
+  { step: "Bank transfer / SWIFT proof", categories: ["bank-transfer"] },
   { step: "Foreign Exchange Certificate (DAB)", categories: ["fx-certificate"] },
   { step: "Valuation report (Ekspertiz)", categories: ["valuation"] },
   { step: "Sales contract", categories: ["sales-contract"] },

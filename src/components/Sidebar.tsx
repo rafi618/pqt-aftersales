@@ -12,6 +12,9 @@ import {
   Upload,
   Link2,
   History,
+  Receipt,
+  FilePlus2,
+  ScanLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +24,13 @@ const archiveNav = [
   { name: "Share Links", href: "/archive/links", icon: Link2 },
   { name: "Activity Log", href: "/archive/activity", icon: History },
 ];
+
+const invoiceNav = [
+  { name: "Invoices & Vouchers", href: "/invoices", exact: true },
+  { name: "Create Invoice", href: "/invoices/new" },
+  { name: "Upload Voucher / Invoice", href: "/invoices/upload" },
+];
+const invoiceIcons = [Receipt, FilePlus2, ScanLine];
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -43,7 +53,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="mt-6 px-3 space-y-1">
+      <nav className="mt-4 px-3 space-y-0.5 overflow-y-auto" style={{ maxHeight: "calc(100vh - 140px)" }}>
         <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
           Documents
         </p>
@@ -65,6 +75,28 @@ export default function Sidebar() {
               )}
             >
               <item.icon className="h-5 w-5" />
+              {item.name}
+            </Link>
+          );
+        })}
+        <p className="px-3 pt-5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          Invoices
+        </p>
+        {invoiceNav.map((item, i) => {
+          const Icon = invoiceIcons[i];
+          const isActive = item.exact
+            ? pathname === item.href || /^\/invoices\/(?!new|upload)/.test(pathname)
+            : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              )}
+            >
+              <Icon className="h-5 w-5" />
               {item.name}
             </Link>
           );

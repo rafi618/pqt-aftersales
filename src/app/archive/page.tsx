@@ -114,7 +114,7 @@ export default async function ArchiveHome({
               : "AI agent is OFF (no API key yet) — the keyword sorter is filing documents by their file names."}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {SECTIONS.map((s) => (
               <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4">
                 <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-mono font-semibold ${s.color}`}>{s.code}</span>
