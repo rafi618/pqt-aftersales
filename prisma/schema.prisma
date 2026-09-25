@@ -95,3 +95,171 @@ model Part {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ─────────────────────────────────────────────────────────────
+// Client Document Archive
+// ─────────────────────────────────────────────────────────────
+
+model Client {
+  id          String   @id @default(cuid())
+  seq         Int      @unique
+  clientCode  String   @unique // e.g. PQT-0012 — printed on every tag
+  name        String
+  email       String?
+  phone       String?
+  nationality String?
+  passportNo  String?
+  properties  String? // free text: project / block / flat numbers
+  notes       String?
+  docSeq      Int      @default(0) // running counter for document reference codes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documents  Document[]
+  shareLinks ShareLink[]
+  invoices   Invoice[]
+  vouchers   Voucher[]
+}
+
+model Document {
+  id            String    @id @default(cuid())
+  refCode       String    @unique // permanent reference, e.g. PQT-0012-0004
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  section       String // legal | property | citizenship | aftersales | invoices | unsorted
+  category      String // category id from src/lib/archive/taxonomy.ts
+  title         String
+  notes         String?
+  unitRef       String? // flat / unit the document relates to
+  docDate       String? // date written on the document (YYYY-MM-DD) if known
+  originalName  String
+  storedPath    String // relative to the storage root, never changes
+  mimeType      String
+  sizeBytes     Int
+  sha256        String
+  uploadedBy    String?
+  uploadSource  String    @default("staff") // staff | link
+  classifiedBy  String    @default("rules") // ai | rules | manual
+  aiConfidence  Float?
+  aiReason      String?
+  status        String    @default("active") // active | superseded | retired
+  statusReason  String?
+  version       Int       @default(1)
+  previousId    String?
+  tagPrintedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([clientId, section])
+  @@index([sha256])
+}
+
+model ShareLink {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  kind       String // upload | download | invoice | voucher-upload
+  label      String?
+  clientId   String? // null = any client
+  client     Client?   @relation(fields: [clientId], references: [id])
+  invoiceId  String? // for kind "invoice": the one invoice this link shows
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id])
+  section    String? // optional: restrict a download link to one section
+  expiresAt  DateTime?
+  revoked    Boolean   @default(false)
+  uses       Int       @default(0)
+  createdAt  DateTime  @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String // client.create, doc.upload, doc.download, doc.recategorize, doc.retire, link.create ...
+  actor      String? // staff | link:<label> | uploader name
+  clientId   String?
+  documentId String?
+  invoiceId  String?
+  voucherId  String?
+  detail     String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+  @@index([clientId])
+  @@index([invoiceId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Invoices & vouchers (kept separate from the client document archive)
+// ─────────────────────────────────────────────────────────────
+
+model Invoice {
+  id            String    @id @default(cuid())
+  number        String    @unique // PQT-INV-2026-0001 (created here) or PQT-UPL-0001 (uploaded)
+  source        String // created | uploaded
+  direction     String    @default("outgoing") // outgoing = PQT bills someone, incoming = someone bills PQT
+  externalNo    String? // number printed on an uploaded invoice (e.g. e-Arşiv number)
+  status        String    @default("draft") // draft | issued | paid | cancelled
+  clientId      String?
+  client        Client?   @relation(fields: [clientId], references: [id])
+  partyName     String // bill-to (outgoing) or issuer (incoming)
+  partyAddress  String?
+  partyEmail    String?
+  partyTaxId    String?
+  issueDate     String // YYYY-MM-DD
+  dueDate       String?
+  currency      String    @default("USD")
+  itemsJson     String    @default("[]")
+  vatRate       Float     @default(0)
+  subtotal      Float     @default(0)
+  vatAmount     Float     @default(0)
+  total         Float     @default(0)
+  notes         String?
+  storedPath    String? // uploaded invoices keep the original file
+  originalName  String?
+  mimeType      String?
+  sizeBytes     Int?
+  sha256        String?
+  createdBy     String?
+  extractedBy   String? // ai | rules | manual
+  aiReason      String?
+  statusReason  String?
+  issuedAt      DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  vouchers   Voucher[]
+  shareLinks ShareLink[]
+}
+
+model Voucher {
+  id           String   @id @default(cuid())
+  refCode      String   @unique // PQT-VCH-0001
+  invoiceId    String?
+  invoice      Invoice? @relation(fields: [invoiceId], references: [id])
+  clientId     String?
+  client       Client?  @relation(fields: [clientId], references: [id])
+  category     String // expense category id, see src/lib/invoices/config.ts
+  vendor       String?
+  description  String?
+  amount       Float?
+  currency     String?
+  voucherDate  String?
+  storedPath   String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  sha256       String
+  uploadedBy   String?
+  uploadSource String   @default("staff") // staff | link
+  extractedBy  String   @default("rules") // ai | rules | manual
+  aiReason     String?
+  status       String   @default("active") // active | retired
+  statusReason String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Counter {
+  key   String @id
+  value Int    @default(0)
+}
